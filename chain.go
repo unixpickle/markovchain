@@ -32,18 +32,22 @@ func (c *Chain) RandomNode() *Node {
 	return c.Nodes[word]
 }
 
-func (c *Chain) RandomSequence() []string {
-	res := make([]string, 0)
-	n := c.RandomNode()
+func (c *Chain) RandomSequence(minLen int) []string {
 	for {
-		res = append(res, n.Word)
-		if n.Word == "." || n.Word == "?" || n.Word == "!" {
-			break
+		res := make([]string, 0)
+		n := c.RandomNode()
+		for {
+			res = append(res, n.Word)
+			if n.Word == "." || n.Word == "?" || n.Word == "!" {
+				break
+			}
+			next := n.RandomTarget()
+			n = c.Nodes[next]
 		}
-		next := n.RandomTarget()
-		n = c.Nodes[next]
+		if len(res) >= minLen {
+			return res
+		}
 	}
-	return res
 }
 
 type Node struct {

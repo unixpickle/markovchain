@@ -36,7 +36,7 @@ func main() {
 
 	fmt.Println("Generating sentences")
 	for i := 0; i < 15; i++ {
-		sequence := chain.RandomSequence()
+		sequence := chain.RandomSequence(7)
 		fmt.Println(wordsToSentence(sequence))
 	}
 }
