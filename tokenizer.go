@@ -20,6 +20,18 @@ type Word struct {
 	Capitalization Capitalization
 }
 
+func (w Word) String() string {
+	switch w.Capitalization {
+	case NoCapital:
+		return w.Text
+	case AllCapital:
+		return strings.ToUpper(w.Text)
+	case SomeCapital:
+		return strings.ToUpper(w.Text[:1]) + w.Text[1:]
+	}
+	panic("unknown capitalization")
+}
+
 type Clause struct {
 	Terminator string
 	Words      []Word
@@ -31,7 +43,7 @@ func (c Clause) String() string {
 		if i != 0 {
 			res += " "
 		}
-		res += w.Text
+		res += w.String()
 	}
 	return res + c.Terminator
 }
@@ -42,11 +54,10 @@ func (s Sentence) String() string {
 	var res string
 	for i, clause := range s {
 		res += clause.String()
-		if i+1 < len(s) {
+		if i+1 < len(s) && !strings.HasSuffix(res, "--") {
 			res += " "
 		}
 	}
-	res = strings.ToUpper(res[:1]) + res[1:]
 	return res
 }
 

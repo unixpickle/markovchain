@@ -4,34 +4,34 @@ I don't know anything about natural language processing and I only know as much 
 
 # Current status
 
-Right now, it generates basic sentences but does not properly support capitalization, parentheses, and quotations. Here are some examples:
+Right now, it generates basic sentences and supports capitalization, commas, and hyphens. However, it does not support parentheses and quotations. Here are some examples:
 
-> Despite the circumstances to watch these tunnels guarded.
+> Teams Alpha, Charlie, and echo, move in from every vector.
 
-> Clearly you must know, i could no longer exist.
+> Cotton's movement is an opportunity for us.
 
-> Get the saic of the btc.
+> Calculating latitude here involved tracking the movements of an avalanche.
 
-> The nsa guy just stared.
+> Hibernity's purpose is to study our minds and create models of how we deal with BTC splinter groups.
 
-> Dropped out of the entire building.
+> Bertrand Alcot, had been head of the BTC to build things, she thought.
 
-> Instantaneously he was one of many such bunkers built during the enlightenment-- to see candidate two?
+> He's expecting you.
 
-> May i call you?
+> Prime numbers below one hundred seventy-five feet per second.
 
-> Soon the parent organization did as well as body temperature.
+> Glancing for any sign of Grady and Alexa followed him down the first time I scheduled a meeting.
 
-> Explain to me outside the radius of the btc came down behind hedrick's odd-shaped craft, he noticed that the majority of their own spies.
+> Both men exchanged looks.
 
-> They started clattering down the stairs and to the ground between them.
+> Which type of cellular biological activity--cells dividing in culture.
 
-> Changes that we're here.
+> Steam tunnels beneath Columbia University Mathematics library at speed--he flipped through the opening.
 
-> Bide our time together has only begun.
+> She waited for the greater good that I'm supposed to be one.
 
-> Civilian government knows who i am very proud of was open, and they began scurrying around to set it forward with your eyes and hands.
+> Significance is great, but it's not enough that we know there aren't any bombing trial.
 
-> Flocks of nearby pigeons scattered in a moment kulkarni clasped his hands.
+> Still, he examined it carefully before taking hold of the BTC wasn't put in charge, details of this technology.
 
-> Euros, some asian bills, but also in the next half hour or so, but his eyes.
+> Imagine a situation where you go in circles, getting closer with every revolution and spinning faster.
