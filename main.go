@@ -27,5 +27,7 @@ func main() {
 		chain.AddSentence(sentence)
 	}
 
-	fmt.Println(chain.RandomSentence(5))
+	for i := 0; i < 15; i++ {
+		fmt.Println(chain.RandomSentence(5))
+	}
 }

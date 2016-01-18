@@ -25,13 +25,40 @@ type Clause struct {
 	Words      []Word
 }
 
+func (c Clause) String() string {
+	var res string
+	for i, w := range c.Words {
+		if i != 0 {
+			res += " "
+		}
+		res += w.Text
+	}
+	return res + c.Terminator
+}
+
 type Sentence []Clause
+
+func (s Sentence) String() string {
+	var res string
+	for i, clause := range s {
+		res += clause.String()
+		if i+1 < len(s) {
+			res += " "
+		}
+	}
+	res = strings.ToUpper(res[:1]) + res[1:]
+	return res
+}
 
 func TokenizeText(text string) []Sentence {
 	res := []Sentence{}
 
 	text = normalizeUnicodeSymbols(text)
 	text = strings.Replace(text, "--", " -- ", -1)
+
+	// NOTE: for now, this will solve some issues.
+	text = strings.Replace(text, "\"", "", -1)
+
 	tokens := strings.Fields(text)
 
 	var sentence Sentence
@@ -39,17 +66,17 @@ func TokenizeText(text string) []Sentence {
 	for _, token := range tokens {
 		bareToken := stripPunctuation(token)
 		word := Word{strings.ToLower(bareToken), wordCapitalization(bareToken)}
-		if introducesClause(bareToken) && clause.Words != nil {
+		if introducesClause(token) && clause.Words != nil {
 			// TODO: use terminators for introductions.
 			sentence = append(sentence, clause)
 			clause = Clause{}
 		}
 		clause.Words = append(clause.Words, word)
-		if flag, terminator := terminatesClause(bareToken); flag {
+		if flag, terminator := terminatesClause(token); flag {
 			clause.Terminator = terminator
 			sentence = append(sentence, clause)
 			clause = Clause{}
-		} else if flag, terminator := terminatesSentence(bareToken); flag {
+		} else if flag, terminator := terminatesSentence(token); flag {
 			clause.Terminator = terminator
 			sentence = append(sentence, clause)
 			clause = Clause{}
