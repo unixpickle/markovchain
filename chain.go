@@ -2,82 +2,103 @@ package main
 
 import "math/rand"
 
+type NodeInfoKey struct {
+	Source      string
+	Transition  string
+	Destination string
+}
+
 type Chain struct {
-	Nodes map[string]*Node
-	Words []string
+	Nodes          map[NodeInfoKey]*Node
+	StartNodes     map[*Node]bool
+	StartNodesList []*Node
 }
 
 func NewChain() *Chain {
-	return &Chain{Nodes: map[string]*Node{}, Words: []string{}}
+	return &Chain{
+		Nodes:          map[NodeInfoKey]*Node{},
+		StartNodes:     map[*Node]bool{},
+		StartNodesList: []*Node{},
+	}
 }
 
-func (c *Chain) AddWord(word string) *Node {
-	if node, ok := c.Nodes[word]; ok {
-		return node
+func (c *Chain) AddSentence(s Sentence) {
+	if len(s) == 0 || len(s[0].Words) == 0 {
+		panic("empty sentence or clause")
 	}
-	if word != "," && word != "?" && word != ";" && word != "!" {
-		c.Words = append(c.Words, word)
-	}
-	node := NewNode(word)
-	c.Nodes[word] = node
-	return node
-}
-
-func (c *Chain) RandomNode() *Node {
-	if len(c.Nodes) == 0 {
-		panic("no nodes to randomly pick from")
-	}
-	idx := rand.Intn(len(c.Words))
-	word := c.Words[idx]
-	return c.Nodes[word]
-}
-
-func (c *Chain) RandomSequence(minLen int) []string {
-	for {
-		res := make([]string, 0)
-		n := c.RandomNode()
-		for {
-			res = append(res, n.Word)
-			if n.Word == "." || n.Word == "?" || n.Word == "!" {
-				break
+	transition := ""
+	lastWord := ""
+	var lastNode *Node
+	for _, clause := range s {
+		for _, word := range clause.Words {
+			node := c.makeNode(NodeInfoKey{
+				Source:      lastWord,
+				Transition:  transition,
+				Destination: word.Text,
+			})
+			if lastNode != nil {
+				lastNode.AddTransition(node)
+			} else {
+				if !c.StartNodes[node] {
+					c.StartNodes[node] = true
+					c.StartNodesList = append(c.StartNodesList, node)
+				}
 			}
-			next := n.RandomTarget()
-			n = c.Nodes[next]
+			lastNode = node
+			lastWord = word.Text
+			transition = ""
 		}
-		if len(res) >= minLen {
+		transition = clause.Terminator
+	}
+	lastNode.AddTransition(c.stopNode(lastNode, transition))
+}
+
+func (c *Chain) RandomSentence(minLen int) Sentence {
+	for {
+		res := Sentence{}
+		clause := Clause{}
+		wordCount := 0
+		node := c.randomStart()
+		for node != nil {
+			wordCount++
+			if node.Separator != "" {
+				clause.Terminator = node.Separator
+				res = append(res, clause)
+				clause = Clause{}
+			}
+			if node.CurrentWord != "" {
+				word := Word{Text: node.CurrentWord}
+				clause.Words = append(clause.Words, word)
+			}
+			node = node.RandomTransition()
+		}
+		if clause.Words != nil {
+			res = append(res, clause)
+		}
+		if wordCount >= minLen {
 			return res
 		}
 	}
 }
 
-type Node struct {
-	Word        string
-	Targets     map[string]int
-	TotalWeight int
+func (c *Chain) randomStart() *Node {
+	idx := rand.Intn(len(c.StartNodesList))
+	return c.StartNodesList[idx]
 }
 
-func NewNode(word string) *Node {
-	return &Node{Word: word, Targets: map[string]int{}}
-}
-
-func (n *Node) AddTarget(word string) {
-	n.Targets[word] = n.Targets[word] + 1
-	n.TotalWeight++
-}
-
-func (n *Node) RandomTarget() string {
-	// If there are no target words, all we can do is loop.
-	if n.TotalWeight == 0 {
-		return n.Word
+func (c *Chain) makeNode(info NodeInfoKey) *Node {
+	if n, ok := c.Nodes[info]; ok {
+		return n
 	}
+	node := NewNode(info.Source, info.Transition, info.Destination)
+	c.Nodes[info] = node
+	return node
+}
 
-	num := rand.Intn(n.TotalWeight)
-	sum := 0
-	for word, weight := range n.Targets {
-		if sum <= num && sum+weight > num {
-			return word
-		}
-		sum += weight
-	}
-	panic("code should be unreachable")
+func (c *Chain) stopNode(lastNode *Node, sep string) *Node {
+	return c.makeNode(NodeInfoKey{
+		Source:      lastNode.CurrentWord,
+		Transition:  sep,
+		Destination: "",
+	})
 }

@@ -10,9 +10,9 @@ var Titles = []string{"Mr.", "Mrs.", "Dr.", "Ms.", "M."}
 type Capitalization int
 
 const (
-	AllCapital Capitalization = iota
+	NoCapital Capitalization = iota
 	SomeCapital
-	NoCapital
+	AllCapital
 )
 
 type Word struct {
@@ -31,6 +31,7 @@ func TokenizeText(text string) []Sentence {
 	res := []Sentence{}
 
 	text = normalizeUnicodeSymbols(text)
+	text = strings.Replace(text, "--", " -- ", -1)
 	tokens := strings.Fields(text)
 
 	var sentence Sentence
@@ -39,6 +40,7 @@ func TokenizeText(text string) []Sentence {
 		bareToken := stripPunctuation(token)
 		word := Word{strings.ToLower(bareToken), wordCapitalization(bareToken)}
 		if introducesClause(bareToken) && clause.Words != nil {
+			// TODO: use terminators for introductions.
 			sentence = append(sentence, clause)
 			clause = Clause{}
 		}
@@ -54,6 +56,12 @@ func TokenizeText(text string) []Sentence {
 			res = append(res, sentence)
 			sentence = nil
 		}
+	}
+	if clause.Words != nil {
+		sentence = append(sentence, clause)
+	}
+	if sentence != nil {
+		res = append(res, sentence)
 	}
 	return res
 }
