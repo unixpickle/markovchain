@@ -7,34 +7,9 @@ var ClauseTerminators = []string{"--", ",", ";", ":", ")", "\""}
 var ClauseIntroducers = []string{"\"", "("}
 var Titles = []string{"Mr.", "Mrs.", "Dr.", "Ms.", "M."}
 
-type Capitalization int
-
-const (
-	NoCapital Capitalization = iota
-	SomeCapital
-	AllCapital
-)
-
-type Word struct {
-	Text           string
-	Capitalization Capitalization
-}
-
-func (w Word) String() string {
-	switch w.Capitalization {
-	case NoCapital:
-		return w.Text
-	case AllCapital:
-		return strings.ToUpper(w.Text)
-	case SomeCapital:
-		return strings.ToUpper(w.Text[:1]) + w.Text[1:]
-	}
-	panic("unknown capitalization")
-}
-
 type Clause struct {
 	Terminator string
-	Words      []Word
+	Words      []string
 }
 
 func (c Clause) String() string {
@@ -43,7 +18,7 @@ func (c Clause) String() string {
 		if i != 0 {
 			res += " "
 		}
-		res += w.String()
+		res += w
 	}
 	return res + c.Terminator
 }
@@ -76,13 +51,12 @@ func TokenizeText(text string) []Sentence {
 	var clause Clause
 	for _, token := range tokens {
 		bareToken := stripPunctuation(token)
-		word := Word{strings.ToLower(bareToken), wordCapitalization(bareToken)}
 		if introducesClause(token) && clause.Words != nil {
 			// TODO: use terminators for introductions.
 			sentence = append(sentence, clause)
 			clause = Clause{}
 		}
-		clause.Words = append(clause.Words, word)
+		clause.Words = append(clause.Words, bareToken)
 		if flag, terminator := terminatesClause(token); flag {
 			clause.Terminator = terminator
 			sentence = append(sentence, clause)
@@ -151,16 +125,6 @@ func stripPunctuation(word string) string {
 		}
 	}
 	return word
-}
-
-func wordCapitalization(word string) Capitalization {
-	if strings.ToUpper(word) == word {
-		return AllCapital
-	} else if strings.ToLower(word) == word {
-		return NoCapital
-	} else {
-		return SomeCapital
-	}
 }
 
 func terminatesClause(word string) (bool, string) {

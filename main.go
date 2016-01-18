@@ -23,13 +23,11 @@ func main() {
 
 	sentences := TokenizeText(string(contents))
 	chain := NewChain()
-	capTracker := NewCapTracker()
 	for _, sentence := range sentences {
 		chain.AddSentence(sentence)
-		capTracker.AddSentence(sentence)
 	}
 
 	for i := 0; i < 15; i++ {
-		fmt.Println(capTracker.FixSentence(chain.RandomSentence(5)))
+		fmt.Println(chain.RandomSentence(5))
 	}
 }

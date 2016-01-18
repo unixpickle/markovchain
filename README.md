@@ -6,32 +6,32 @@ I don't know anything about natural language processing and I only know as much 
 
 Right now, it generates basic sentences and supports capitalization, commas, and hyphens. However, it does not support parentheses and quotations. Here are some examples:
 
-> Teams Alpha, Charlie, and echo, move in from every vector.
+> Exhibits one and five were torn from their stupor--staring at him, Grady got to his height, putting a dent in its place.
 
-> Cotton's movement is an opportunity for us.
+> Min Zhao is in hand to Marrano.
 
-> Calculating latitude here involved tracking the movements of an avalanche.
+> Were they on some island, too?
 
-> Hibernity's purpose is to study our minds and create models of how we deal with BTC splinter groups.
+> Best out of the catch to an end.
 
-> Bertrand Alcot, had been head of the BTC to build things, she thought.
+> who are no windows.
 
-> He's expecting you.
+> Wish I'd known that they heard from him.
 
-> Prime numbers below one hundred seventy-five feet per second.
+> It was supposedly of his handheld game console.
 
-> Glancing for any sign of Grady and Alexa followed him down the first time I scheduled a meeting.
+> Everyone in the universe.
 
-> Both men exchanged looks.
+> That meant at a series of tests to map every function of your 'friend,' and you will make minor adjustments to see that the staff sergeant fired short bursts with his forward momentum.
 
-> Which type of cellular biological activity--cells dividing in culture.
+> That's where you're wrong.
 
-> Steam tunnels beneath Columbia University Mathematics library at speed--he flipped through the opening.
+> Next to them in.
 
-> She waited for the greater good that I'm supposed to be one.
+> Nonoperations personnel, please clear the threshing floor.
 
-> Significance is great, but it's not enough that we know there aren't any bombing trial.
+> Near-infrared readings of the light.
 
-> Still, he examined it carefully before taking hold of the BTC wasn't put in charge, details of this technology.
+> Doors behind and to do in pursuit of the conference table near a place to land and await Alexa's signal.
 
-> Imagine a situation where you go in circles, getting closer with every revolution and spinning faster.
+> Reluctantly, Grady continued to follow procedure for a few hundred meters away.

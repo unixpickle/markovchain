@@ -34,7 +34,7 @@ func (c *Chain) AddSentence(s Sentence) {
 			node := c.makeNode(NodeInfoKey{
 				Source:      lastWord,
 				Transition:  transition,
-				Destination: word.Text,
+				Destination: word,
 			})
 			if lastNode != nil {
 				lastNode.AddTransition(node)
@@ -45,7 +45,7 @@ func (c *Chain) AddSentence(s Sentence) {
 				}
 			}
 			lastNode = node
-			lastWord = word.Text
+			lastWord = word
 			transition = ""
 		}
 		transition = clause.Terminator
@@ -67,8 +67,7 @@ func (c *Chain) RandomSentence(minLen int) Sentence {
 				clause = Clause{}
 			}
 			if node.CurrentWord != "" {
-				word := Word{Text: node.CurrentWord}
-				clause.Words = append(clause.Words, word)
+				clause.Words = append(clause.Words, node.CurrentWord)
 			}
 			node = node.RandomTransition()
 		}
