@@ -1,103 +1,141 @@
-package main
+package markovchain
 
-import "math/rand"
+import "sort"
 
-type NodeInfoKey struct {
-	Source      string
-	Transition  string
-	Destination string
+// A Comparison represents the ordinal relationship
+// between two comparable things.
+type Comparison int
+
+const (
+	Equal Comparison = iota
+	Less
+	Greater
+)
+
+// A State represents a state in a Markov chain.
+// Since states are stored in transition Chains, they
+// are comparable to facilitate efficient lookups.
+type State interface {
+	// Compare the receiver to s1.
+	// If the receiver is greater than s1, this returns
+	// Greater, etc.
+	Compare(s1 State) Comparison
 }
 
+// StateTransitions stores the transitions going out
+// of a given state in a Markov chain.
+//
+// A StateTransitions instance is equivalent to a
+// row/column in a markov matrix.
+type StateTransitions struct {
+	// State is the state whose outgoing transitions are
+	// stored in this object.
+	State State
+
+	// Targets is the list of possible states which could
+	// result from this state.
+	Targets []State
+
+	// Probabilities stores the transition probability for
+	// each target in Targets.
+	Probabilities []float64
+}
+
+func (s *StateTransitions) registerTarget(state State) int {
+	idx := searchStates(s.Targets, state)
+	if idx == len(s.Targets) {
+		s.Targets = append(s.Targets, state)
+		s.Probabilities = append(s.Probabilities, 0)
+	} else if s.Targets[idx].Compare(state) != Equal {
+		s.Targets = append(s.Targets, nil)
+		s.Probabilities = append(s.Probabilities, 0)
+		copy(s.Targets[idx+1:], s.Targets[idx:])
+		copy(s.Probabilities[idx+1:], s.Probabilities[idx:])
+		s.Probabilities[idx] = 0
+		s.Targets[idx] = state
+	}
+	return idx
+}
+
+// A Chain stores the transition probabilities between
+// states in a Markov process.
+//
+// A Chain is equivalent to a Markov matrix.
 type Chain struct {
-	Nodes          map[NodeInfoKey]*Node
-	StartNodes     map[*Node]bool
-	StartNodesList []*Node
+	Entries []*StateTransitions
 }
 
-func NewChain() *Chain {
-	return &Chain{
-		Nodes:          map[NodeInfoKey]*Node{},
-		StartNodes:     map[*Node]bool{},
-		StartNodesList: []*Node{},
+// NewChainChan creates a Chain by reading a channel of
+// states and calculating transition probabilities based
+// on that channel.
+func NewChainChan(ch <-chan State) *Chain {
+	res := &Chain{}
+
+	var lastState State
+	for state := range ch {
+		if lastState != nil {
+			res.addEntry(lastState, state)
+		}
+		lastState = state
+	}
+	res.registerState(lastState)
+	res.normalizeProbabilities()
+
+	return res
+}
+
+// Lookup finds the transition information going out
+// of the given state.
+// If no entry exists, nil is returned.
+func (c *Chain) Lookup(state State) *StateTransitions {
+	idx := c.searchEntries(state)
+	if idx == len(c.Entries) {
+		return nil
+	} else if c.Entries[idx].State.Compare(state) == Equal {
+		return c.Entries[idx]
+	} else {
+		return nil
 	}
 }
 
-func (c *Chain) AddSentence(s Sentence) {
-	if len(s) == 0 || len(s[0].Words) == 0 {
-		panic("empty sentence or clause")
-	}
-	transition := ""
-	lastWord := ""
-	var lastNode *Node
-	for _, clause := range s {
-		for _, word := range clause.Words {
-			node := c.makeNode(NodeInfoKey{
-				Source:      lastWord,
-				Transition:  transition,
-				Destination: word,
-			})
-			if lastNode != nil {
-				lastNode.AddTransition(node)
-			} else {
-				if !c.StartNodes[node] {
-					c.StartNodes[node] = true
-					c.StartNodesList = append(c.StartNodesList, node)
-				}
-			}
-			lastNode = node
-			lastWord = word
-			transition = ""
-		}
-		transition = clause.Terminator
-	}
-	lastNode.AddTransition(c.stopNode(lastNode, transition))
+func (c *Chain) addEntry(oldState, newState State) {
+	entry := c.registerState(oldState)
+	targetIdx := entry.registerTarget(newState)
+	entry.Probabilities[targetIdx]++
 }
 
-func (c *Chain) RandomSentence(minLen int) Sentence {
-	for {
-		res := Sentence{}
-		clause := Clause{}
-		wordCount := 0
-		node := c.randomStart()
-		for node != nil {
-			wordCount++
-			if node.Separator != "" {
-				clause.Terminator = node.Separator
-				res = append(res, clause)
-				clause = Clause{}
-			}
-			if node.CurrentWord != "" {
-				clause.Words = append(clause.Words, node.CurrentWord)
-			}
-			node = node.RandomTransition()
+func (c *Chain) normalizeProbabilities() {
+	for _, entry := range c.Entries {
+		var sum float64
+		for _, x := range entry.Probabilities {
+			sum += x
 		}
-		if clause.Words != nil {
-			res = append(res, clause)
-		}
-		if wordCount >= minLen {
-			return res
+		for i := range entry.Probabilities {
+			entry.Probabilities[i] /= sum
 		}
 	}
 }
 
-func (c *Chain) randomStart() *Node {
-	idx := rand.Intn(len(c.StartNodesList))
-	return c.StartNodesList[idx]
-}
-
-func (c *Chain) makeNode(info NodeInfoKey) *Node {
-	if n, ok := c.Nodes[info]; ok {
-		return n
+func (c *Chain) registerState(state State) *StateTransitions {
+	idx := c.searchEntries(state)
+	if idx == len(c.Entries) {
+		c.Entries = append(c.Entries, &StateTransitions{State: state})
+	} else if c.Entries[idx].State.Compare(state) != Equal {
+		c.Entries = append(c.Entries, nil)
+		copy(c.Entries[idx+1:], c.Entries[idx:])
+		c.Entries[idx] = &StateTransitions{State: state}
 	}
-	node := NewNode(info.Source, info.Transition, info.Destination)
-	c.Nodes[info] = node
-	return node
+	return c.Entries[idx]
 }
 
-func (c *Chain) stopNode(lastNode *Node, sep string) *Node {
-	return c.makeNode(NodeInfoKey{
-		Source:      lastNode.CurrentWord,
-		Transition:  sep,
-		Destination: "",
+func (c *Chain) searchEntries(state State) int {
+	return sort.Search(len(c.Entries), func(i int) bool {
+		return c.Entries[i].State.Compare(state) != Less
+	})
+}
+
+func searchStates(states []State, state State) int {
+	return sort.Search(len(states), func(i int) bool {
+		return states[i].Compare(state) != Less
 	})
 }
