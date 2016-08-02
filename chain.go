@@ -1,6 +1,10 @@
 package markovchain
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/unixpickle/splaytree"
+)
 
 // A Comparison represents the ordinal relationship
 // between two comparable things.
@@ -62,7 +66,7 @@ func (s *StateTransitions) registerTarget(state State) int {
 //
 // A Chain is equivalent to a Markov matrix.
 type Chain struct {
-	Entries []*StateTransitions
+	entries splaytree.Tree
 }
 
 // NewChainChan creates a Chain by reading a channel of
@@ -78,7 +82,7 @@ func NewChainChan(ch <-chan State) *Chain {
 		}
 		lastState = state
 	}
-	res.registerState(lastState)
+	res.lookupOrCreate(lastState)
 	res.normalizeProbabilities()
 
 	return res
@@ -88,24 +92,36 @@ func NewChainChan(ch <-chan State) *Chain {
 // of the given state.
 // If no entry exists, nil is returned.
 func (c *Chain) Lookup(state State) *StateTransitions {
-	idx := c.searchEntries(state)
-	if idx == len(c.Entries) {
-		return nil
-	} else if c.Entries[idx].State.Compare(state) == Equal {
-		return c.Entries[idx]
-	} else {
-		return nil
+	searchNode := &treeNode{trans: &StateTransitions{State: state}}
+	node := c.entries.Root
+	for node != nil {
+		comp := node.Value.Compare(searchNode)
+		if comp == 0 {
+			return node.Value.(*treeNode).trans
+		} else if comp == -1 {
+			node = node.Right
+		} else if comp == 1 {
+			node = node.Left
+		}
 	}
+	return nil
+}
+
+// Iterate iterates through all of the transitions in
+// the table (in order of their state).
+// If f returns false, iteration terminates early.
+func (c *Chain) Iterate(f func(s *StateTransitions) bool) {
+	iterateTree(c.entries.Root, f)
 }
 
 func (c *Chain) addEntry(oldState, newState State) {
-	entry := c.registerState(oldState)
+	entry := c.lookupOrCreate(oldState)
 	targetIdx := entry.registerTarget(newState)
 	entry.Probabilities[targetIdx]++
 }
 
 func (c *Chain) normalizeProbabilities() {
-	for _, entry := range c.Entries {
+	c.Iterate(func(entry *StateTransitions) bool {
 		var sum float64
 		for _, x := range entry.Probabilities {
 			sum += x
@@ -113,29 +129,49 @@ func (c *Chain) normalizeProbabilities() {
 		for i := range entry.Probabilities {
 			entry.Probabilities[i] /= sum
 		}
-	}
-}
-
-func (c *Chain) registerState(state State) *StateTransitions {
-	idx := c.searchEntries(state)
-	if idx == len(c.Entries) {
-		c.Entries = append(c.Entries, &StateTransitions{State: state})
-	} else if c.Entries[idx].State.Compare(state) != Equal {
-		c.Entries = append(c.Entries, nil)
-		copy(c.Entries[idx+1:], c.Entries[idx:])
-		c.Entries[idx] = &StateTransitions{State: state}
-	}
-	return c.Entries[idx]
-}
-
-func (c *Chain) searchEntries(state State) int {
-	return sort.Search(len(c.Entries), func(i int) bool {
-		return c.Entries[i].State.Compare(state) != Less
+		return true
 	})
+}
+
+func (c *Chain) lookupOrCreate(state State) *StateTransitions {
+	entry := c.Lookup(state)
+	if entry == nil {
+		entry = &StateTransitions{State: state}
+		c.entries.Insert(&treeNode{trans: entry})
+	}
+	return entry
 }
 
 func searchStates(states []State, state State) int {
 	return sort.Search(len(states), func(i int) bool {
 		return states[i].Compare(state) != Less
 	})
+}
+
+func iterateTree(node *splaytree.Node, f func(s *StateTransitions) bool) bool {
+	if node == nil {
+		return true
+	}
+	if !iterateTree(node.Left, f) {
+		return false
+	}
+	if !f(node.Value.(*treeNode).trans) {
+		return false
+	}
+	return iterateTree(node.Right, f)
+}
+
+type treeNode struct {
+	trans *StateTransitions
+}
+
+func (t *treeNode) Compare(t1 splaytree.Value) int {
+	comparison := t.trans.State.Compare(t1.(*treeNode).trans.State)
+	if comparison == Less {
+		return -1
+	} else if comparison == Greater {
+		return 1
+	} else {
+		return 0
+	}
 }

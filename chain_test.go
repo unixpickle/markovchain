@@ -35,50 +35,49 @@ func TestNewChainChan(t *testing.T) {
 	close(states)
 
 	actual := NewChainChan(states)
-	expected := &Chain{
-		Entries: []*StateTransitions{
-			&StateTransitions{
-				State:         testingState(1),
-				Targets:       []State{testingState(6)},
-				Probabilities: []float64{1},
-			},
-			&StateTransitions{
-				State:         testingState(2),
-				Targets:       []State{testingState(2), testingState(3), testingState(5)},
-				Probabilities: []float64{0.25, 0.25, 0.5},
-			},
-			&StateTransitions{
-				State:         testingState(3),
-				Targets:       []State{testingState(2)},
-				Probabilities: []float64{1},
-			},
-			&StateTransitions{
-				State:         testingState(4),
-				Targets:       []State{testingState(2)},
-				Probabilities: []float64{1},
-			},
-			&StateTransitions{
-				State:         testingState(5),
-				Targets:       []State{testingState(4), testingState(5), testingState(7)},
-				Probabilities: []float64{1.0 / 3, 1.0 / 3, 1.0 / 3},
-			},
-			&StateTransitions{
-				State: testingState(6),
-			},
-			&StateTransitions{
-				State:         testingState(7),
-				Targets:       []State{testingState(1)},
-				Probabilities: []float64{1},
-			},
+	expected := []*StateTransitions{
+		&StateTransitions{
+			State:         testingState(1),
+			Targets:       []State{testingState(6)},
+			Probabilities: []float64{1},
+		},
+		&StateTransitions{
+			State:         testingState(2),
+			Targets:       []State{testingState(2), testingState(3), testingState(5)},
+			Probabilities: []float64{0.25, 0.25, 0.5},
+		},
+		&StateTransitions{
+			State:         testingState(3),
+			Targets:       []State{testingState(2)},
+			Probabilities: []float64{1},
+		},
+		&StateTransitions{
+			State:         testingState(4),
+			Targets:       []State{testingState(2)},
+			Probabilities: []float64{1},
+		},
+		&StateTransitions{
+			State:         testingState(5),
+			Targets:       []State{testingState(4), testingState(5), testingState(7)},
+			Probabilities: []float64{1.0 / 3, 1.0 / 3, 1.0 / 3},
+		},
+		&StateTransitions{
+			State: testingState(6),
+		},
+		&StateTransitions{
+			State:         testingState(7),
+			Targets:       []State{testingState(1)},
+			Probabilities: []float64{1},
 		},
 	}
-	if len(actual.Entries) != len(expected.Entries) {
-		t.Errorf("expected %d entries but got %d", len(expected.Entries),
-			len(actual.Entries))
-		return
-	}
-	for i, x := range expected.Entries {
-		a := actual.Entries[i]
+	i := -1
+	for _, x := range expected {
+		i++
+		a := actual.Lookup(x.State)
+		if a == nil {
+			t.Errorf("missing entry for %v", x.State)
+			continue
+		}
 		if x.State != a.State {
 			t.Errorf("entry %d: expected state %v but got %v", i, x.State, a.State)
 		}
