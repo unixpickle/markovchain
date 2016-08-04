@@ -1,6 +1,7 @@
 package markovchain
 
 import (
+	"math/rand"
 	"sort"
 
 	"github.com/unixpickle/splaytree"
@@ -43,6 +44,27 @@ type StateTransitions struct {
 	// Probabilities stores the transition probability for
 	// each target in Targets.
 	Probabilities []float64
+}
+
+// Sample selects a random target state using the
+// target probabilities.
+// It returns nil if no targets are present.
+func (s *StateTransitions) Sample() State {
+	if len(s.Probabilities) == 0 {
+		return nil
+	}
+
+	num := rand.Float64()
+	var sum float64
+	for i, prob := range s.Probabilities {
+		sum += prob
+		if sum >= num {
+			return s.Targets[i]
+		}
+	}
+
+	// Deal with rounding error edge cases.
+	return s.Targets[len(s.Targets)-1]
 }
 
 func (s *StateTransitions) registerTarget(state State) int {
