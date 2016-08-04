@@ -1,3 +1,6 @@
+// Package markovchain is a generic Markov chain
+// implementation designed to infer Markov chains
+// from streams of states.
 package markovchain
 
 import (
